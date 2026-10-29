@@ -1,0 +1,7 @@
+{
+  "solutions": [
+    { "name": "CoreSolution", "dependsOn": [] },
+    { "name": "ExtensionA", "dependsOn": ["CoreSolution"] },
+    { "name": "ExtensionB", "dependsOn": ["CoreSolution", "ExtensionA"] }
+  ]
+}

@@ -1,0 +1,23 @@
+name: Agent task
+description: A ticket written so Copilot's coding agent can complete it unattended
+labels: [agent-ready]
+body:
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: Why this matters; link relevant files.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: A checklist the PR must satisfy. Each item should be testable.
+      placeholder: "- [ ] ...\n- [ ] ..."
+    validations:
+      required: true
+  - type: textarea
+    id: out-of-scope
+    attributes:
+      label: Out of scope
