@@ -25,7 +25,8 @@ for f in docs/tasks/*.md; do
   labels=$(sed -n '2s/^labels: //p' "$f")
   body=$(sed '1,2d' "$f")
   # agent-ready on creation would trigger automation; hold it back until task 08 is done.
-  labels_no_trigger=$(echo "$labels" | sed 's/agent-ready,\?//; s/,$//')
+  # Portable (BSD + GNU sed): -E, not the GNU-only `\?`.
+  labels_no_trigger=$(echo "$labels" | sed -E 's/agent-ready,?//; s/,$//')
   url=$(gh issue create --repo "$REPO" --title "$title" --label "$labels_no_trigger" --body "$body")
   echo "created $url"
   [ -n "$PROJECT_URL" ] && gh project item-add "$(basename "$PROJECT_URL")" --owner "$OWNER" --url "$url" >/dev/null || true
