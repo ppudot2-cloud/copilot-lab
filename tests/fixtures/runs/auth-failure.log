@@ -1,0 +1,3 @@
+deploy-uat	Import solution	2026-06-20T10:04:05.1234567Z Authenticating to https://org1234.crm.dynamics.com
+deploy-uat	Import solution	2026-06-20T10:04:09.7654321Z ##[error]AADSTS7000222: The provided client secret keys for app 'abc' are expired.
+deploy-uat	Import solution	2026-06-20T10:04:10.0000000Z ##[error]Process completed with exit code 1.

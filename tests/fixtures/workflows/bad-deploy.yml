@@ -1,0 +1,20 @@
+name: Bad Deploy
+on:
+  workflow_dispatch:
+  pull_request_target:
+
+jobs:
+  call-core:
+    uses: some-org/core/.github/workflows/_deploy.yml@main
+    secrets: inherit
+
+  deploy:
+    runs-on: ubuntu-latest
+    environment: Prod
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - uses: some-vendor/send-mail@v3
+      - run: echo "Title is ${{ github.event.pull_request.title }}"
+      - run: deploy --secret ${{ secrets.PP_CLIENT_SECRET }}

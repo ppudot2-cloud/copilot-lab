@@ -1,0 +1,16 @@
+{
+  "databaseId": 111,
+  "workflowName": "Deploy UAT + Prod",
+  "headBranch": "main",
+  "event": "push",
+  "conclusion": "failure",
+  "startedAt": "2026-06-20T10:00:00Z",
+  "updatedAt": "2026-06-20T10:04:10Z",
+  "url": "https://github.com/ppudot2-cloud/GHA-Dynamics/actions/runs/111",
+  "jobs": [
+    {"name": "deploy-uat", "conclusion": "failure", "steps": [
+      {"name": "Checkout", "conclusion": "success"},
+      {"name": "Import solution", "conclusion": "failure"}
+    ]}
+  ]
+}

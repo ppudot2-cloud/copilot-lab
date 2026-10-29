@@ -1,12 +1,13 @@
-# 01 Setup: repo, instructions, and the cloud agent environment
+# 01 Setup: make Copilot understand a pipeline repo
 labels: learning,phase-1
 
-**Concepts:** repository instructions, path-scoped instructions, `copilot-setup-steps.yml`.
+**Concepts:** repo instructions, path-scoped instructions, `copilot-setup-steps.yml`, custom agents, skills, prompt files.
 
 ## Do
-- [ ] Open `.github/copilot-instructions.md` and `.github/instructions/python.instructions.md`. Ask Copilot Chat "how do I run tests here?" and confirm it answers from the instructions file.
-- [ ] Run the `Copilot Setup Steps` workflow manually (Actions tab) and confirm it goes green.
-- [ ] Edit the instructions file to add a rule you can test (for example "always name tests `test_<thing>_<outcome>`"), then ask Copilot to add a test and check it obeys.
+- [ ] Read `.github/copilot-instructions.md` and `.github/instructions/workflows.instructions.md`. Ask Copilot Chat "what are the rules for changing a workflow here?" and confirm it answers from them.
+- [ ] Run **Copilot Setup Steps** from the Actions tab; confirm green.
+- [ ] Pick each agent in turn (`failure-triager`, `workflow-hardener`, `workflow-security-reviewer`) and ask it "what is your job and what will you refuse to do?".
+- [ ] Ask "add timeouts to examples/gha-dynamics/deploy-prod.yml" WITHOUT naming a skill. Check whether `harden-workflow` was applied (before/after audit counts in the answer).
 
 ## You understand it when
-You can explain the difference between repo-wide instructions, path-scoped instructions, and setup steps, and which one fixes "the agent can't run pytest".
+You can say which behavior belongs in instructions (always on), a skill (loaded when the task matches), an agent (a role you choose), or a prompt (a shortcut), and which one fixes "the agent cannot run the audit".

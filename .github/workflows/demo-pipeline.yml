@@ -1,0 +1,38 @@
+name: Demo Pipeline
+
+# A pipeline that breaks on purpose, in the ways your real Power Platform pipeline breaks.
+# Run it from the Actions tab with a scenario, then watch `failure-triage` open an issue.
+on:
+  workflow_dispatch:
+    inputs:
+      scenario:
+        description: Which failure to simulate
+        type: choice
+        default: success
+        options: [success, auth, config, solution-checker, import, flaky-infra, hang]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: demo-pipeline
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Simulate scenario
+        env:
+          SCENARIO: ${{ inputs.scenario }}
+        run: |
+          case "$SCENARIO" in
+            success) echo "all good" ;;
+            auth) echo "##[error]AADSTS7000222: The provided client secret keys for app are expired."; exit 1 ;;
+            config) echo "##[error]Required variable PP_UAT_URL is not set"; exit 1 ;;
+            solution-checker) echo "##[error]Solution Checker found 4 critical issues in CoreSolution"; exit 1 ;;
+            import) echo "##[error]ImportSolution failed: 0x80048306 missing dependency"; exit 1 ;;
+            flaky-infra) echo "##[error]fatal: unable to access: The requested URL returned error: 503"; exit 1 ;;
+            hang) sleep 600 ;;
+          esac

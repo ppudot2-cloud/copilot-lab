@@ -1,0 +1,16 @@
+{
+  "databaseId": 28195148854,
+  "workflowName": "Build and Deploy",
+  "headBranch": "main",
+  "event": "workflow_dispatch",
+  "conclusion": "failure",
+  "startedAt": "2026-05-26T19:27:51Z",
+  "updatedAt": "2026-06-25T19:30:23Z",
+  "url": "https://github.com/ppudot2-cloud/GHA-Dynamics/actions/runs/28195148854",
+  "jobs": [
+    {"name": "setup", "conclusion": "success", "steps": []},
+    {"name": "deploy-uat", "conclusion": "failure", "steps": [
+      {"name": "Waiting for approval", "conclusion": "failure"}
+    ]}
+  ]
+}

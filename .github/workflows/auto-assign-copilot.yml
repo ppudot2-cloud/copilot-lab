@@ -1,17 +1,27 @@
 name: Auto-assign Copilot
 
-# Automation lesson: label an issue `agent-ready` and Copilot's coding agent picks it up.
-# Requires a repo secret COPILOT_ASSIGN_TOKEN (a PAT with issues:write); GITHUB_TOKEN
-# cannot assign Copilot. Verify the assignee login against current docs if this fails.
+# Label an issue `agent-ready` and Copilot's coding agent picks it up.
+# Needs a repo secret COPILOT_ASSIGN_TOKEN (a PAT with issues:write); GITHUB_TOKEN cannot
+# assign Copilot. Verify the assignee name against current docs if assignment fails.
 on:
   issues:
     types: [labeled]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: assign-${{ github.event.issue.number }}
+  cancel-in-progress: false
 
 jobs:
   assign:
     if: github.event.label.name == 'agent-ready'
     runs-on: ubuntu-latest
+    timeout-minutes: 2
     steps:
       - env:
           GH_TOKEN: ${{ secrets.COPILOT_ASSIGN_TOKEN }}
-        run: gh issue edit "${{ github.event.issue.number }}" --repo "${{ github.repository }}" --add-assignee "@copilot"
+          ISSUE: ${{ github.event.issue.number }}
+          REPO: ${{ github.repository }}
+        run: gh issue edit "$ISSUE" --repo "$REPO" --add-assignee "@copilot"

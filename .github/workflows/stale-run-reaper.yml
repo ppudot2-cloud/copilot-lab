@@ -1,0 +1,41 @@
+name: Stale Run Reaper
+
+# Fix for the real "720h run" finding: runs stuck in `waiting` (environment approval nobody gave)
+# are cancelled after MAX_AGE_HOURS so they stop blocking concurrency groups and cluttering history.
+on:
+  schedule:
+    - cron: "0 */6 * * *"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: Only list what would be cancelled
+        type: boolean
+        default: true
+
+permissions:
+  actions: write
+  contents: read
+
+concurrency:
+  group: stale-run-reaper
+  cancel-in-progress: false
+
+jobs:
+  reap:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      MAX_AGE_HOURS: "48"
+      GH_TOKEN: ${{ github.token }}
+      REPO: ${{ github.repository }}
+      DRY_RUN: ${{ inputs.dry_run || 'false' }}
+    steps:
+      - name: Cancel runs waiting too long
+        run: |
+          CUTOFF=$(date -u -d "-${MAX_AGE_HOURS} hours" +%s)
+          gh run list --repo "$REPO" --status waiting --json databaseId,createdAt,workflowName,url \
+            --jq ".[] | select((.createdAt | fromdateiso8601) < $CUTOFF) | [.databaseId, .workflowName, .url] | @tsv" |
+          while IFS=$'\t' read -r id name url; do
+            echo "stale: $name $url"
+            if [ "$DRY_RUN" != "true" ]; then gh run cancel "$id" --repo "$REPO"; fi
+          done

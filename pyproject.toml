@@ -1,12 +1,15 @@
 [project]
-name = "solutionops"
+name = "pipelineintel"
 version = "0.1.0"
-description = "Tiny Power Platform solution-ops toolkit used as a GitHub Copilot learning lab"
+description = "Audit GitHub Actions workflows for DevSecOps gaps and turn failed runs into actionable fixes"
 requires-python = ">=3.10"
-dependencies = []
+dependencies = ["pyyaml>=6"]
 
 [project.optional-dependencies]
 dev = ["pytest>=8", "pytest-cov>=5", "ruff>=0.6"]
+
+[project.scripts]
+pipelineintel = "pipelineintel.cli:main"
 
 [build-system]
 requires = ["setuptools>=68"]
@@ -17,8 +20,12 @@ where = ["src"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "--cov=solutionops --cov-report=term-missing"
+addopts = "--cov=pipelineintel --cov-report=term-missing"
 
 [tool.ruff]
 line-length = 100
 src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B"]
+ignore = ["E501"]

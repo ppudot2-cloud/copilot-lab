@@ -1,0 +1,3 @@
+# Pipeline changes always need a person, including ones written by an agent.
+/.github/workflows/ @ppudot2-cloud
+/examples/ @ppudot2-cloud

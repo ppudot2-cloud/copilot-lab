@@ -1,65 +1,80 @@
-# copilot-lab
+# copilot-lab: DevSecOps for GitHub Actions with Copilot
 
-A small, safe sandbox for learning GitHub Copilot end to end: instructions, custom agents, skills, prompt files, the cloud coding agent, Projects, automation, stacked PRs, Fusion, and merge queue.
-
-The code (`solutionops`) mirrors two real pieces of the GHA-Dynamics ALM pipeline (deploy ordering and deployment-settings linting) but needs no Power Platform access, so an agent can build, test, and open PRs without touching any environment.
-
-## How the pieces fit
+A sandbox for one loop, applied to your real Power Platform pipelines (GHA-Dynamics callers + GHA-CICD-Core reusables):
 
 ```
-Issue (agent-task template)           <- you write acceptance criteria
-  │  label agent-ready ─────────────> auto-assign-copilot.yml (automation)
-  ▼
-Project board card                    <- Backlog → Agent working → In review → Done
-  ▼
-planner agent                         <- plan + PR stack          (.github/agents)
-  ▼
-Copilot coding agent                  <- env from copilot-setup-steps.yml
-  │  reads copilot-instructions.md (always)
-  │  loads skills when the task matches (.github/skills)
-  │  model chosen by you or Fusion (Standard / High / Max)
-  ▼
-Stack of small PRs  (gh stack)        <- each PR reviewable alone
-  ▼
-CI (ruff + pytest ≥80%) + tester & reviewer agents
-  ▼
-Merge queue (whole stack as one group) → main
+workflow runs ──> failure captured at failure time ──> classified + fingerprinted
+      ^                                                        │
+      │                                                        v
+ gaps found by audit <── fix AND guard merged <── agent PR <── issue with acceptance criteria
 ```
 
-## Quick start
+Everything Copilot-specific (instructions, agents, skills, projects, automation, stacked PRs, Fusion, merge queue) is exercised **through** that loop, not in isolation.
+
+## What the real pipelines told us
+
+From `docs/reports/` (generated from your live repos):
+
+| Finding | Evidence | Guard in this repo |
+|---|---|---|
+| Cross-repo reusables/actions referenced at `@main` | 42 high findings | `audit` rule `mutable-action-ref`, task 05 |
+| Almost no failure can be diagnosed later | HTTP 410 on logs for nearly all failed runs | `failure-triage.yml` captures at failure time |
+| A run lived about 30 days | 720h "Build and Deploy" run | `stale-run-reaper.yml`, task 06 |
+| No `timeout-minutes` on 24 jobs, no `permissions` on 17 | audit | tasks 05, 06 |
+| `secrets: inherit` x5, static client secrets | audit | `audit`, OIDC note |
+| Deploys with nothing reacting to failure | audit | task 07 |
+| Mostly cancelled runs | 14 of 40 recent runs | `concurrency` review, task 06 |
+
+## How the pieces work
+
+| Piece | File | Role in the loop |
+|---|---|---|
+| Audit | `src/pipelineintel/audit.py`, `docs/audit-rules.md` | finds gaps statically |
+| Capture | `.github/workflows/failure-triage.yml`, `collect.py` | grabs evidence while logs exist, one issue per fingerprint |
+| Classify | `failures.py` | category, owner (workflow / platform / human), fix + guard checklist |
+| Agents | `.github/agents/` | `failure-triager`, `workflow-hardener`, `workflow-security-reviewer` |
+| Skills | `.github/skills/` | `fix-workflow-failure`, `harden-workflow` load when the task matches |
+| Instructions | `.github/copilot-instructions.md`, `instructions/` | always-on pipeline rules |
+| Agent env | `copilot-setup-steps.yml` | lets the cloud agent run tests and the audit |
+| Automation | `auto-assign-copilot.yml` | `agent-ready` label starts the coding agent |
+| Safety | `CODEOWNERS`, ratchet test, dogfood audit in CI | agents cannot quietly weaken a pipeline |
+| Practice target | `examples/gha-dynamics/` + `tests/test_examples_ratchet.py` | real workflows to fix; findings may only go down |
+| Failure generator | `demo-pipeline.yml` | breaks on purpose in 6 realistic ways |
+
+## Try it (no GitHub needed)
 
 ```bash
 pip install -e ".[dev]"
 ruff check . && pytest
-python -m solutionops order samples/solutions.json
+python -m pipelineintel audit examples/gha-dynamics --fail-on info
+python -m pipelineintel triage --run tests/fixtures/runs/stalled-run.json
+python -m pipelineintel collect --repo ppudot2-cloud/GHA-Dynamics --limit 40 --include-cancelled
 ```
 
-Publish to GitHub, create labels, issues and a Project board:
+## Publish and start the tasks
 
 ```bash
 gh auth refresh -s project
 scripts/bootstrap.sh <your-user>/copilot-lab --private
 ```
 
-## Learning path
+Then work through `docs/tasks/` in order (also created as issues).
 
-Work through `docs/tasks/` in order. Each file is also created as a GitHub issue by the bootstrap script.
+| # | Task | Copilot topic | DevSecOps topic |
+|---|------|---------------|-----------------|
+| 01 | Setup and context | instructions, agents, skills | |
+| 02 | Read the baseline audit | security-reviewer agent | gap analysis |
+| 03 | Capture failures live | | failure capture, dedupe |
+| 04 | Teach the triager | coding agent + skill | classification gaps |
+| 05 | Harden pinning | **stacked PRs** | supply chain |
+| 06 | Permissions, timeouts, concurrency | agent on real workflows | blast radius, hangs |
+| 07 | Failure notification guard | | detection |
+| 08 | Projects + label automation | **Projects, automation** | owner-based routing |
+| 09 | Fusion + merge policy | **Fusion, merge queue** | who approves pipeline changes |
+| 10 | Capstone | everything | red run to merged fix |
 
-| # | Task | Teaches |
-|---|------|---------|
-| 01 | Setup and context | instructions, setup steps |
-| 02 | Agents, skills, prompts tour | when to use which |
-| 03 | Bug: cycle drops solutions | first full ticket → PR run |
-| 04 | Unknown dependency error | parallel sessions and conflicts |
-| 05 | Lint rule | skill tuning loop |
-| 06 | `matrix` command | stacked PRs |
-| 07 | Fusion comparison | effort levels, cost vs quality |
-| 08 | Projects and automation | label-triggered agent |
-| 09 | Merge queue | safe merging, agent limits |
-| 10 | Capstone | everything, hands-off |
+## Caveats
 
-Tasks 03 to 05 are seeded with real gaps in the code, so the agent has genuine work to do. The baseline is green: 8 tests pass.
-
-## Things I could not verify offline
-
-These Copilot features are new; check current GitHub docs when a step behaves differently: exact `gh stack` flags, how to assign Copilot via CLI/Actions (task 08), custom-agent `tools:` names, and what Copilot may merge unattended (task 09).
+- Static audit only: no line numbers, does not follow composite actions, treats internal and external `@main` alike.
+- Not verified here: exact `gh stack` flags, assigning Copilot via CLI/Actions, custom-agent `tools:` names, whether `timeout-minutes` bounds an approval wait, and what Copilot may merge unattended. Tasks 05, 06, 08, 09 tell you to check current docs.
+- `examples/` is a vendored copy; fixing it does not change your real repos. Port the changes to GHA-CICD-Core (where the logic lives) once you trust them.

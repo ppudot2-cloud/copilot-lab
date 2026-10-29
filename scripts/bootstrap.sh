@@ -13,7 +13,7 @@ if ! gh repo view "$REPO" >/dev/null 2>&1; then
   gh repo create "$REPO" "$VIS" --source=. --remote=origin --push
 fi
 
-for l in learning bug feature skills fusion automation merge stacked-prs capstone agent-ready \
+for l in learning security failures reliability automation fusion merge stacked-prs capstone agent-ready pipeline-failure \
          phase-1 phase-2 phase-3 phase-4 phase-5; do
   gh label create "$l" --repo "$REPO" --force >/dev/null
 done
